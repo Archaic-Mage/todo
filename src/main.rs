@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use serde_json::{json,Result, Value};
 
-const JSON_FILE: &str = "todo.json";
+const JSON_FILE: &str = "/tmp/todo.json";
 
 #[derive(Parser)]
 #[clap(name = "todo", version = "1.0", author = "Your Name")]
@@ -19,13 +19,15 @@ enum SubCommand {
         val: Vec<i32>,
     },
     List,
+    Clear,
+    Clearall,
 }
 
 fn create_json() -> String {
     let json = json!({
         "default": []
     });
-    let json = serde_json::to_string_pretty(&json).unwrap();
+    let json = serde_json::to_string(&json).unwrap();
     std::fs::write(JSON_FILE, &json).unwrap();
     json
 }
@@ -41,7 +43,7 @@ fn open_json() -> Result<Value> {
 }
 
 fn dump_json(json: &Value) {
-    let json = serde_json::to_string_pretty(json).unwrap();
+    let json = serde_json::to_string(json).unwrap();
     std::fs::write(JSON_FILE, json).unwrap();
 }
 
@@ -73,6 +75,24 @@ fn list() {
     }
 }
 
+fn clear(all: bool) {
+    let mut json = open_json().unwrap();
+    if all {
+        json["default"] = json!([]);
+    } else {
+        let default = json["default"].as_array_mut().unwrap();
+        let mut i = 0;
+        while i < default.len() {
+            if default[i]["done"].as_bool().unwrap() {
+                default.remove(i);
+            } else {
+                i += 1;
+            }
+        }
+    }
+    dump_json(&json);
+}
+
 fn main() {
     let cli = Opt::parse();
 
@@ -86,6 +106,12 @@ fn main() {
         }
         SubCommand::List => {
             list();
+        }
+        SubCommand::Clear => {
+            clear(false);
+        }
+        SubCommand::Clearall => {
+            clear(true);
         }
     }
 }
