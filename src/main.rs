@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 use serde_json::{json,Result, Value};
 use std::env;
+use console::style;
 
 const DEFAULT: &str = "/home/mage/Documents/todo.json";
 const JSON_FILE: &str = "todo.json";
@@ -106,7 +107,7 @@ fn list_todo(file: &str) {
     for (i, v) in default.iter().enumerate() {
         let done = v["done"].as_bool().unwrap();
         let name = v["name"].as_str().unwrap();
-        println!("{}: {} {}", i, if done { "☑" } else { "☐" }, name);
+        println!("{}: {}", i, if done {style(name).strikethrough()} else {style(name)})
     }
 }
 
